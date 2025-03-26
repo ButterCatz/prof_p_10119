@@ -7,9 +7,42 @@ using namespace std;
 
 #define MAX_SEARCH 10
 
-struct entry {
+class entry {
+private:
     int frequency;
     vector<string> sentence;
+public:
+    vector<string> get_sentence() const {
+        return sentence;
+    }
+
+    bool operator>(const entry &e) const {
+        return frequency > e.frequency;
+    }
+
+    bool operator!=(const entry &e) const {
+        return frequency != e.frequency;
+    }
+
+    friend istream &operator>>(istream &is, entry &e) {
+        int k;
+        is >> k >> e.frequency;
+        e.sentence.clear();
+        for (int j = 0; j < k; j++) {
+            string s;
+            is >> s;
+            e.sentence.push_back(s);
+        }
+        return is;
+    }
+
+    friend ostream &operator<<(ostream &os, const entry &e) {
+        os << e.frequency << " ";
+        for (int i = 0; i < e.sentence.size(); i++) {
+            os << e.sentence[i] << " ";
+        }
+        return os;
+    }
 };
 
 vector<entry> read_entries() {
@@ -17,15 +50,8 @@ vector<entry> read_entries() {
     cin >> n;
     vector<entry> entries;
     for (int i = 0; i < n; i++) {
-        int k;
-        cin >> k;
         entry e;
-        cin >> e.frequency;
-        for (int j = 0; j < k; j++) {
-            string s;
-            cin >> s;
-            e.sentence.push_back(s);
-        }
+        cin >> e;
         entries.push_back(e);
     }
     return entries;
@@ -95,7 +121,7 @@ bool is_match(vector<string> candidate, vector<string> query) {
 vector<entry> get_matched(vector<entry> entries, vector<string> query) {
     vector<entry> matched;
     for (int i = 0; i < entries.size(); i++) {
-        vector<string> candidate = entries[i].sentence;
+        vector<string> candidate {entries[i].get_sentence()};
         if (is_match(candidate, query)) {
             matched.push_back(entries[i]);
         }
@@ -111,14 +137,10 @@ void print_matched(vector<entry> matched) {
     int match_count = 0;
     for (int j = 0; j < matched.size(); j++) {
         if (match_count == MAX_SEARCH &&
-            (j + 1 < matched.size() && matched[j].frequency != matched[j + 1].frequency)) {
+            (j + 1 < matched.size() && matched[j] != matched[j + 1])) {
             break;
         }
-        cout << matched[j].frequency << " ";
-        for (int k = 0; k < matched[j].sentence.size(); k++) {
-            cout << matched[j].sentence[k] << " ";
-        }
-        cout << endl;
+        cout << matched[j] << endl;
         match_count++;
     }
 }
@@ -126,7 +148,7 @@ void print_matched(vector<entry> matched) {
 int main(int argc, char const *argv[]) {
     vector<entry> entries{read_entries()};
 
-    stable_sort(entries.begin(), entries.end(), [](entry a, entry b) { return a.frequency > b.frequency; });
+    stable_sort(entries.begin(), entries.end(), greater<entry>());
 
     int Q;
     cin >> Q;
